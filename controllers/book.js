@@ -1,4 +1,6 @@
 const Book = require('../models/Book');
+const sharp = require('sharp');
+const fs = require('fs');
 
 
 //Fonction pour récupérer tous les livres
@@ -27,34 +29,61 @@ exports.getBookById = async (req, res) => {
 };
 
 // Fonction pour ajouter un livre
-exports.addBook = (req, res, next) => {
-  console.log("entrée dans le controller addbook");
 
-  // Les données du formulaire sont déjà disponibles dans req.body grâce à multer
+exports.addBook = (req, res, next) => {
+  console.log("Entrée dans le controller addbook");
   console.log("Contenu de la requête reçue :", req.body);
   console.log("Nom du fichier :", req.file.filename);
+
+  if (!req.file) {
+    return res.status(400).json({ message: "Aucun fichier image téléchargé." });
+  }
+
+  const imagePath = req.file.path;
+  console.log("Chemin d'accès à l'image :", imagePath);
+
+  // Vérifier si le fichier image existe
+  if (!fs.existsSync(imagePath)) {
+    return res.status(400).json({ message: "Le fichier image n'existe pas." });
+  }
 
   // Convertir les données du livre (envoyées en tant que chaîne JSON) en objet JavaScript
   const bookData = JSON.parse(req.body.book);
   const { userId, title, author, year, genre, ratings, averageRating } = bookData;
 
-  // Créer une nouvelle instance de Book avec les données du formulaire et le nom du fichier
-  const book = new Book({
-    userId,
-    title,
-    author,
-    year,
-    genre,
-    ratings,
-    averageRating,
-    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-  });
+  // Traiter l'image avec sharp et enregistrer le chemin dans imageUrl
+  sharp(imagePath)
+    .resize(400, 300)
+    .toFile(`${req.file.destination}/${title}.webp`, (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Erreur lors du traitement de l'image." });
+      }
 
-  // Enregistrer le livre dans la base de données
-  book.save()
-    .then(() => res.status(201).json({ message: 'Livre créé !' }))
-    .catch(error => res.status(400).json({ error }));
+      console.log("Image redimensionnée et convertie en format WebP.");
+
+      const imageUrl = `${req.protocol}://${req.get('host')}/images/${title}.webp`;
+      console.log("Image enregistrée, imageUrl :", imageUrl);
+
+
+      const book = new Book({
+        userId,
+        title,
+        author,
+        year,
+        genre,
+        ratings,
+        averageRating,
+        imageUrl
+      });
+
+      // Enregistrer le livre dans la base de données
+      book.save()
+        .then(() => res.status(201).json({ message: 'Livre créé !' }))
+        .catch(error => res.status(400).json({ error }));
+    });
 };
+
 
 
 //fonction pour modifier un livre
@@ -103,11 +132,17 @@ exports.deleteBookById = async (req, res, next) => {
     if (!bookToDelete) {
       return res.status(404).json({ message: "Livre non trouvé" });
     }
-    await bookToDelete.deleteOne();
-    res.status(200).json({ message: "Livre supprimé avec succès" });
 
+    // Supprimer le fichier image
+    const imagePath = `./images/${bookToDelete.title}.webp`; // Remplacez 'chemin/vers/le/dossier/images/' par le chemin réel de votre dossier images
+    fs.unlinkSync(imagePath);
+
+    // Supprimer le livre de la base de données
+    await bookToDelete.deleteOne();
+
+    res.status(200).json({ message: "Livre supprimé avec succès" });
   } catch (error) {
-    console.log("On catch", error.message)
+    console.log("Erreur lors de la suppression du livre :", error.message);
     res.status(500).json({ message: error.message });
   }
 };
