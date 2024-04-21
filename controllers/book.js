@@ -2,7 +2,6 @@ const Book = require('../models/Book');
 const sharp = require('sharp');
 const fs = require('fs');
 
-
 //Fonction pour récupérer tous les livres
 exports.getAllBooks = async (req, res, next) => {
     try {
@@ -74,7 +73,6 @@ exports.updateBookById = async (req, res) => {
     if (!updatedBook) {
       return res.status(404).json({ message: 'Livre non trouvé' });
     }
-
 
     updatedBook.title = updatedBookData.title;
     updatedBook.author = updatedBookData.author;
