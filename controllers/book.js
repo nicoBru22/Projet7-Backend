@@ -64,21 +64,18 @@ exports.addBook = (req, res, next) => {
   });
 };
 
-
-
 //fonction pour modifier un livre
 exports.updateBookById = async (req, res) => {
   try {
     const bookId = req.params.bookId;
     const updatedBookData = JSON.parse(req.body.book);
 
-    // Vérifie si le livre existe
     const updatedBook = await Book.findById(bookId);
     if (!updatedBook) {
       return res.status(404).json({ message: 'Livre non trouvé' });
     }
 
-    // Met à jour les propriétés du livre
+
     updatedBook.title = updatedBookData.title;
     updatedBook.author = updatedBookData.author;
     updatedBook.year = updatedBookData.year;
@@ -100,7 +97,6 @@ exports.updateBookById = async (req, res) => {
     .catch(error => res.status(400).json({ error }));
 
   } catch (error) {
-    console.log("error ?", error.message)
     res.status(500).json({ message: error.message });
   }
 };
@@ -126,6 +122,7 @@ exports.deleteBookById = async (req, res, next) => {
   }
 };
 
+//Fonction pour trier les notes et garder que les 3 meilleures
 exports.getBestRatedBooks = async (req, res, next) => {
   try {
     const booksWithRatings = await Book.find();
@@ -151,6 +148,7 @@ exports.getBestRatedBooks = async (req, res, next) => {
   }
 };
 
+//Fonction pour ajouter une note selon l'utilisateur
 exports.rateBook = async (req, res, next) => {
   try {
     const { bookId } = req.params;

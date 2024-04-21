@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const userRoutes = require('./routes/user');
 const bookRoutes = require('./routes/book');
 
-// Utilisation de body-parser inclus dans Express pour analyser les données JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -22,7 +21,6 @@ app.use((req, res, next) => {
 
 const path = require('path');
 
-// Définir le dossier contenant les fichiers statiques (images)
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use('/api/auth', userRoutes);
