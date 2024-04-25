@@ -66,10 +66,11 @@ exports.addBook = (req, res, next) => {
 //fonction pour modifier un livre
 exports.updateBookById = async (req, res) => {
   try {
+    const userId = req.userId
     const bookId = req.params.bookId;
     const updatedBookData = JSON.parse(req.body.book);
 
-    const updatedBook = await Book.findById(bookId);
+    const updatedBook = await Book.findOne({ _id: bookId, userId: userId });
     if (!updatedBook) {
       return res.status(404).json({ message: 'Livre non trouvé' });
     }
@@ -86,8 +87,9 @@ exports.updateBookById = async (req, res) => {
         .resize(400, 300)
         .toFile(`${req.file.destination}/${updatedBookData.title}.webp`);
       imageUrl = `${req.protocol}://${req.get('host')}/images/${updatedBookData.title}.webp`;
+      updatedBook.imageUrl = imageUrl;
     }
-    updatedBook.imageUrl = imageUrl;
+    
 
 
     updatedBook.save()
@@ -102,8 +104,9 @@ exports.updateBookById = async (req, res) => {
 // Fonction pour supprimer un livre par son ID
 exports.deleteBookById = async (req, res, next) => {
   try {
+    const userId = req.userId
     const bookId = req.params.bookId;
-    const bookToDelete = await Book.findById(bookId);
+    const bookToDelete = await Book.findOne({ _id: bookId, userId: userId });
 
     if (!bookToDelete) {
       return res.status(404).json({ message: "Livre non trouvé" });

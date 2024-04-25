@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+require('dotenv').config();
 
 const mongoose = require('mongoose');
 const userRoutes = require('./routes/user');
@@ -8,7 +9,7 @@ const bookRoutes = require('./routes/book');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-mongoose.connect('mongodb+srv://Bnicolas:Motdepass123@bnicolas.bivhvpy.mongodb.net/?retryWrites=true&w=majority&appName=Bnicolas')
+mongoose.connect(process.env.MONGODB_LOGIN)
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
